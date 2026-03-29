@@ -26,6 +26,20 @@
     }
   },
   "services": {
+    "delete_sms": {
+      "name": "Удалить SMS",
+      "description": "Удалить SMS-сообщение по его индексу.",
+      "fields": {
+        "entry_id": {
+          "name": "Запись конфигурации",
+          "description": "Запись конфигурации Huawei LTE Extended."
+        },
+        "index": {
+          "name": "Индекс сообщения",
+          "description": "Индекс SMS для удаления."
+        }
+      }
+    },
     "get_sms_list": {
       "name": "Получить список SMS",
       "description": "Получить список SMS-сообщений из входящих роутера.",
@@ -41,20 +55,6 @@
         "count": {
           "name": "Количество",
           "description": "Количество сообщений на странице."
-        }
-      }
-    },
-    "delete_sms": {
-      "name": "Удалить SMS",
-      "description": "Удалить SMS-сообщение по его индексу.",
-      "fields": {
-        "entry_id": {
-          "name": "Запись конфигурации",
-          "description": "Запись конфигурации Huawei LTE Extended."
-        },
-        "index": {
-          "name": "Индекс сообщения",
-          "description": "Индекс SMS для удаления."
         }
       }
     },

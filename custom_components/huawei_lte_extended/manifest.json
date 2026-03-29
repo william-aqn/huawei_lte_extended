@@ -1,7 +1,7 @@
 {
   "domain": "huawei_lte_extended",
   "name": "Huawei LTE Extended (SMS Reader)",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "documentation": "https://github.com/william-aqn/huawei_lte_extended",
   "issue_tracker": "https://github.com/william-aqn/huawei_lte_extended/issues",
   "dependencies": ["huawei_lte"],

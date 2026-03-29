@@ -26,6 +26,20 @@
     }
   },
   "services": {
+    "delete_sms": {
+      "name": "Delete SMS",
+      "description": "Delete an SMS message by its index.",
+      "fields": {
+        "entry_id": {
+          "name": "Config entry",
+          "description": "The Huawei LTE Extended config entry to use."
+        },
+        "index": {
+          "name": "Message index",
+          "description": "The index of the SMS to delete."
+        }
+      }
+    },
     "get_sms_list": {
       "name": "Get SMS list",
       "description": "Fetch a list of SMS messages from the router inbox.",
@@ -41,20 +55,6 @@
         "count": {
           "name": "Count",
           "description": "Number of messages per page."
-        }
-      }
-    },
-    "delete_sms": {
-      "name": "Delete SMS",
-      "description": "Delete an SMS message by its index.",
-      "fields": {
-        "entry_id": {
-          "name": "Config entry",
-          "description": "The Huawei LTE Extended config entry to use."
-        },
-        "index": {
-          "name": "Message index",
-          "description": "The index of the SMS to delete."
         }
       }
     },

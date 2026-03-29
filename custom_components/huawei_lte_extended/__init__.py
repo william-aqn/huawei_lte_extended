@@ -39,14 +39,14 @@ SERVICE_SCHEMA_GET_SMS_LIST = vol.Schema(
 SERVICE_SCHEMA_DELETE_SMS = vol.Schema(
     {
         vol.Required("entry_id"): cv.string,
-        vol.Required("index"): vol.Coerce(int),
+        vol.Required("index"): vol.All(vol.Coerce(int), vol.Range(min=0)),
     }
 )
 
 SERVICE_SCHEMA_MARK_READ = vol.Schema(
     {
         vol.Required("entry_id"): cv.string,
-        vol.Required("index"): vol.Coerce(int),
+        vol.Required("index"): vol.All(vol.Coerce(int), vol.Range(min=0)),
     }
 )
 
@@ -76,6 +76,8 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     async def handle_get_sms_list(call: ServiceCall) -> dict[str, Any]:
         """Handle get_sms_list service call."""
         coordinator = _get_coordinator(hass, call.data["entry_id"])
+        if coordinator.is_router_suspended:
+            return {"messages": []}
         messages = await coordinator.async_get_sms_list(
             page=call.data["page"],
             count=call.data["count"],
@@ -85,20 +87,23 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     async def handle_delete_sms(call: ServiceCall) -> None:
         """Handle delete_sms service call."""
         coordinator = _get_coordinator(hass, call.data["entry_id"])
-        await coordinator.async_delete_sms(call.data["index"])
+        if not coordinator.is_router_suspended:
+            await coordinator.async_delete_sms(call.data["index"])
 
     async def handle_mark_read(call: ServiceCall) -> None:
         """Handle mark_read service call."""
         coordinator = _get_coordinator(hass, call.data["entry_id"])
-        await coordinator.async_mark_read(call.data["index"])
+        if not coordinator.is_router_suspended:
+            await coordinator.async_mark_read(call.data["index"])
 
     async def handle_send_sms(call: ServiceCall) -> None:
         """Handle send_sms service call."""
         coordinator = _get_coordinator(hass, call.data["entry_id"])
-        await coordinator.async_send_sms(
-            phone=call.data["phone"],
-            message=call.data["message"],
-        )
+        if not coordinator.is_router_suspended:
+            await coordinator.async_send_sms(
+                phone=call.data["phone"],
+                message=call.data["message"],
+            )
 
     hass.services.async_register(
         DOMAIN,

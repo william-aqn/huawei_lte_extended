@@ -73,6 +73,15 @@ class HuaweiLteSmsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(seconds=scan_interval),
         )
 
+    @property
+    def is_router_suspended(self) -> bool:
+        """Check if the parent router is suspended."""
+        try:
+            router = self._get_router()
+            return router.suspended
+        except (ConfigEntryNotReady, UpdateFailed):
+            return True
+
     def _get_router(self) -> Any:
         """Get the parent huawei_lte Router object."""
         huawei_data = self.hass.data.get(HUAWEI_LTE_DOMAIN)
