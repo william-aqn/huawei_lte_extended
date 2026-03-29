@@ -114,6 +114,47 @@ Mark a message as read.
 | `entry_id` | yes | Config entry ID |
 | `index` | yes | Message index |
 
+### `huawei_lte_extended.send_sms`
+
+Send an SMS message via the router.
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `entry_id` | yes | Config entry ID |
+| `phone` | yes | Recipient phone number (e.g. `+79001234567`) |
+| `message` | yes | Text of the SMS message |
+
+## Dashboard: Send SMS card
+
+Create two helpers in **Settings > Devices & Services > Helpers**:
+
+- `input_text.sms_phone` — Phone number (max length: 20)
+- `input_text.sms_message` — Message text (max length: 255)
+
+Then add this card to your dashboard:
+
+```yaml
+type: entities
+title: Send SMS
+entities:
+  - entity: input_text.sms_phone
+    name: Phone number
+  - entity: input_text.sms_message
+    name: Message
+  - type: button
+    name: Send
+    icon: mdi:send
+    tap_action:
+      action: perform-action
+      perform_action: huawei_lte_extended.send_sms
+      data:
+        entry_id: YOUR_ENTRY_ID
+        phone: "{{ states('input_text.sms_phone') }}"
+        message: "{{ states('input_text.sms_message') }}"
+```
+
+> Replace `YOUR_ENTRY_ID` with your config entry ID (find it in **Settings > Devices & Services > Huawei LTE Extended** — click configure, the entry ID is in the URL).
+
 ## How it works
 
 The component reuses the connection from the built-in Huawei LTE integration — no duplicate sessions or extra credentials needed. It periodically calls the router's SMS API (`get_sms_list`) and compares message indices to detect new arrivals. On the first poll after startup, existing messages are indexed silently (no events fired) to avoid a flood of notifications.

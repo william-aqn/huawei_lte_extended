@@ -183,3 +183,12 @@ class HuaweiLteSmsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
 
         await self.async_request_refresh()
+
+    async def async_send_sms(self, phone: str, message: str) -> None:
+        """Send an SMS message."""
+        router = self._get_router()
+
+        async with self._api_lock:
+            await self.hass.async_add_executor_job(
+                router.client.sms.send_sms, [phone], message
+            )

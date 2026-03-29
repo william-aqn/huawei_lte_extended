@@ -22,6 +22,7 @@ PLATFORMS = [Platform.SENSOR]
 SERVICE_GET_SMS_LIST = "get_sms_list"
 SERVICE_DELETE_SMS = "delete_sms"
 SERVICE_MARK_READ = "mark_read"
+SERVICE_SEND_SMS = "send_sms"
 
 SERVICE_SCHEMA_GET_SMS_LIST = vol.Schema(
     {
@@ -46,6 +47,14 @@ SERVICE_SCHEMA_MARK_READ = vol.Schema(
     {
         vol.Required("entry_id"): cv.string,
         vol.Required("index"): vol.Coerce(int),
+    }
+)
+
+SERVICE_SCHEMA_SEND_SMS = vol.Schema(
+    {
+        vol.Required("entry_id"): cv.string,
+        vol.Required("phone"): cv.string,
+        vol.Required("message"): cv.string,
     }
 )
 
@@ -83,6 +92,14 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
         coordinator = _get_coordinator(hass, call.data["entry_id"])
         await coordinator.async_mark_read(call.data["index"])
 
+    async def handle_send_sms(call: ServiceCall) -> None:
+        """Handle send_sms service call."""
+        coordinator = _get_coordinator(hass, call.data["entry_id"])
+        await coordinator.async_send_sms(
+            phone=call.data["phone"],
+            message=call.data["message"],
+        )
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_GET_SMS_LIST,
@@ -103,6 +120,13 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
         SERVICE_MARK_READ,
         handle_mark_read,
         schema=SERVICE_SCHEMA_MARK_READ,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SEND_SMS,
+        handle_send_sms,
+        schema=SERVICE_SCHEMA_SEND_SMS,
     )
 
     return True

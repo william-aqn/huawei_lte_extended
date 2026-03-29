@@ -71,6 +71,24 @@
           "description": "The index of the SMS to mark as read."
         }
       }
+    },
+    "send_sms": {
+      "name": "Send SMS",
+      "description": "Send an SMS message via the router.",
+      "fields": {
+        "entry_id": {
+          "name": "Config entry",
+          "description": "The Huawei LTE Extended config entry to use."
+        },
+        "phone": {
+          "name": "Phone number",
+          "description": "Recipient phone number (e.g. +1234567890)."
+        },
+        "message": {
+          "name": "Message",
+          "description": "Text of the SMS message to send."
+        }
+      }
     }
   }
 }

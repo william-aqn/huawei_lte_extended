@@ -47,3 +47,20 @@ mark_read:
         number:
           min: 0
           mode: box
+
+send_sms:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: huawei_lte_extended
+    phone:
+      required: true
+      selector:
+        text:
+    message:
+      required: true
+      selector:
+        text:
+          multiline: true
