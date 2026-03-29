@@ -62,7 +62,7 @@ class HuaweiLteSmsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize the coordinator."""
         self._parent_entry_id: str = entry.data[CONF_PARENT_ENTRY_ID]
         scan_interval = entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        self._known_indices: set[int] = set()
+        self._last_sms_index: int = 0
         self._initial_scan_done: bool = False
         self._api_lock = asyncio.Lock()
 
@@ -118,16 +118,18 @@ class HuaweiLteSmsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 raise UpdateFailed(f"Error fetching SMS list: {err}") from err
 
         messages = _parse_sms_list(response)
-        current_indices = {msg["index"] for msg in messages}
+        max_index = max(
+            (int(msg["index"]) for msg in messages), default=0
+        )
 
         # Fire events for new messages (skip first scan to avoid flooding)
-        if self._initial_scan_done:
-            new_indices = current_indices - self._known_indices
+        if not self._initial_scan_done:
+            self._initial_scan_done = True
+            self._last_sms_index = max_index
+        else:
             for msg in messages:
-                if msg["index"] in new_indices:
-                    _LOGGER.debug(
-                        "New SMS from %s: %s", msg["phone"], msg["content"][:50]
-                    )
+                if int(msg["index"]) > self._last_sms_index:
+                    _LOGGER.debug("New SMS received (index %s)", msg["index"])
                     self.hass.bus.async_fire(
                         EVENT_SMS_RECEIVED,
                         {
@@ -138,10 +140,7 @@ class HuaweiLteSmsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                             "index": msg["index"],
                         },
                     )
-        else:
-            self._initial_scan_done = True
-
-        self._known_indices = current_indices
+            self._last_sms_index = max(self._last_sms_index, max_index)
 
         unread_count = sum(1 for msg in messages if not msg["read"])
         total_count = int(response.get("Count", len(messages)))

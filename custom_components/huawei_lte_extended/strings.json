@@ -22,6 +22,9 @@
     "sensor": {
       "unread_sms": {
         "name": "Unread SMS"
+      },
+      "last_sms": {
+        "name": "Last SMS"
       }
     }
   },

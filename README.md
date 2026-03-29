@@ -6,6 +6,7 @@ Custom component for [Home Assistant](https://www.home-assistant.io/) that exten
 
 ## Features
 
+- **Last SMS sensor** — shows the content of the most recently received message with phone, date, index as attributes
 - **Unread SMS sensor** — displays unread message count with recent messages in attributes
 - **New SMS event** — fires `huawei_lte_extended_sms_received` when a new message arrives, usable as an automation trigger
 - **Services** — read inbox, delete messages, mark as read, send SMS
@@ -39,7 +40,17 @@ Custom component for [Home Assistant](https://www.home-assistant.io/) that exten
 3. Select your Huawei LTE router from the dropdown
 4. Set the SMS polling interval (default: 60 seconds)
 
-## Sensor
+## Sensors
+
+### Last SMS (`sensor.{name}_last_sms`)
+
+| Property | Description |
+|----------|-------------|
+| State | Content of the most recent SMS message |
+| `phone` | Sender phone number |
+| `date` | Date and time received |
+| `index` | Message index (used for delete/mark_read) |
+| `read` | `true` / `false` |
 
 ### Unread SMS (`sensor.{name}_unread_sms`)
 
@@ -202,7 +213,7 @@ entities:
 
 ## How it works
 
-The component reuses the connection from the built-in Huawei LTE integration — no duplicate sessions or extra credentials needed. It periodically calls the router's SMS API (`get_sms_list`) and compares message indices to detect new arrivals. On the first poll after startup, existing messages are indexed silently (no events fired) to avoid a flood of notifications.
+The component reuses the connection from the built-in Huawei LTE integration — no duplicate sessions or extra credentials needed. It periodically calls the router's SMS API (`get_sms_list`) and tracks the highest message index to detect new arrivals. On the first poll after startup, existing messages are indexed silently (no events fired) to avoid a flood of notifications.
 
 ## License
 
