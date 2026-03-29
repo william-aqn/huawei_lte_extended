@@ -69,7 +69,9 @@ index: 40001
 entry_id: "abcdef1234567890"
 ```
 
-### Automation example
+### Automation examples
+
+**Forward every SMS to your phone:**
 
 ```yaml
 automation:
@@ -82,6 +84,47 @@ automation:
         data:
           title: "SMS from {{ trigger.event.data.phone }}"
           message: "{{ trigger.event.data.content }}"
+```
+
+**Extract verification code and send to Telegram:**
+
+```yaml
+automation:
+  - alias: "Catch verification code from SMS"
+    trigger:
+      - platform: event
+        event_type: huawei_lte_extended_sms_received
+    condition:
+      - condition: template
+        value_template: >
+          {{ trigger.event.data.content | regex_search('[Кк]од|[Cc]ode|[Пп]ароль') }}
+    action:
+      - service: notify.telegram
+        data:
+          title: "Verification code"
+          message: >
+            From: {{ trigger.event.data.phone }}
+            Code: {{ trigger.event.data.content | regex_findall('[0-9]{4,8}') | first | default('see full text') }}
+            Full text: {{ trigger.event.data.content }}
+```
+
+**Auto-delete spam SMS by keyword:**
+
+```yaml
+automation:
+  - alias: "Auto-delete spam SMS"
+    trigger:
+      - platform: event
+        event_type: huawei_lte_extended_sms_received
+    condition:
+      - condition: template
+        value_template: >
+          {{ trigger.event.data.content | regex_search('[Кк]редит|[Зз]айм|[Вв]ыигр|casino|lottery') }}
+    action:
+      - service: huawei_lte_extended.delete_sms
+        data:
+          entry_id: "{{ trigger.event.data.entry_id }}"
+          index: "{{ trigger.event.data.index }}"
 ```
 
 ## Services
