@@ -1,0 +1,76 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Huawei LTE Extended",
+        "description": "Select the Huawei LTE router to extend with SMS reading capabilities.",
+        "data": {
+          "parent_entry_id": "Router",
+          "scan_interval": "SMS poll interval (seconds)"
+        }
+      }
+    },
+    "abort": {
+      "no_huawei_entries": "No Huawei LTE integrations found. Please set up the Huawei LTE integration first.",
+      "already_configured": "This router is already configured."
+    },
+    "error": {
+      "parent_not_found": "Selected router not found."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "unread_sms": {
+        "name": "Unread SMS"
+      }
+    }
+  },
+  "services": {
+    "get_sms_list": {
+      "name": "Get SMS list",
+      "description": "Fetch a list of SMS messages from the router inbox.",
+      "fields": {
+        "entry_id": {
+          "name": "Config entry",
+          "description": "The Huawei LTE Extended config entry to use."
+        },
+        "page": {
+          "name": "Page",
+          "description": "Page number (starting from 1)."
+        },
+        "count": {
+          "name": "Count",
+          "description": "Number of messages per page."
+        }
+      }
+    },
+    "delete_sms": {
+      "name": "Delete SMS",
+      "description": "Delete an SMS message by its index.",
+      "fields": {
+        "entry_id": {
+          "name": "Config entry",
+          "description": "The Huawei LTE Extended config entry to use."
+        },
+        "index": {
+          "name": "Message index",
+          "description": "The index of the SMS to delete."
+        }
+      }
+    },
+    "mark_read": {
+      "name": "Mark SMS as read",
+      "description": "Mark an SMS message as read by its index.",
+      "fields": {
+        "entry_id": {
+          "name": "Config entry",
+          "description": "The Huawei LTE Extended config entry to use."
+        },
+        "index": {
+          "name": "Message index",
+          "description": "The index of the SMS to mark as read."
+        }
+      }
+    }
+  }
+}

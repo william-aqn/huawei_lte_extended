@@ -1,0 +1,76 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Настройка Huawei LTE Extended",
+        "description": "Выберите роутер Huawei LTE для расширения возможностями чтения SMS.",
+        "data": {
+          "parent_entry_id": "Роутер",
+          "scan_interval": "Интервал опроса SMS (секунды)"
+        }
+      }
+    },
+    "abort": {
+      "no_huawei_entries": "Интеграции Huawei LTE не найдены. Сначала настройте интеграцию Huawei LTE.",
+      "already_configured": "Этот роутер уже настроен."
+    },
+    "error": {
+      "parent_not_found": "Выбранный роутер не найден."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "unread_sms": {
+        "name": "Непрочитанные SMS"
+      }
+    }
+  },
+  "services": {
+    "get_sms_list": {
+      "name": "Получить список SMS",
+      "description": "Получить список SMS-сообщений из входящих роутера.",
+      "fields": {
+        "entry_id": {
+          "name": "Запись конфигурации",
+          "description": "Запись конфигурации Huawei LTE Extended."
+        },
+        "page": {
+          "name": "Страница",
+          "description": "Номер страницы (начиная с 1)."
+        },
+        "count": {
+          "name": "Количество",
+          "description": "Количество сообщений на странице."
+        }
+      }
+    },
+    "delete_sms": {
+      "name": "Удалить SMS",
+      "description": "Удалить SMS-сообщение по его индексу.",
+      "fields": {
+        "entry_id": {
+          "name": "Запись конфигурации",
+          "description": "Запись конфигурации Huawei LTE Extended."
+        },
+        "index": {
+          "name": "Индекс сообщения",
+          "description": "Индекс SMS для удаления."
+        }
+      }
+    },
+    "mark_read": {
+      "name": "Отметить SMS как прочитанное",
+      "description": "Отметить SMS-сообщение как прочитанное по его индексу.",
+      "fields": {
+        "entry_id": {
+          "name": "Запись конфигурации",
+          "description": "Запись конфигурации Huawei LTE Extended."
+        },
+        "index": {
+          "name": "Индекс сообщения",
+          "description": "Индекс SMS для отметки как прочитанного."
+        }
+      }
+    }
+  }
+}
