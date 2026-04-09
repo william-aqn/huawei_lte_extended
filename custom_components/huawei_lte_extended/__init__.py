@@ -108,7 +108,7 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
         SERVICE_DELETE_ALL_SMS,
         handle_delete_all_sms,
         schema=SERVICE_SCHEMA_DELETE_ALL_SMS,
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
     return True
