@@ -142,12 +142,10 @@ class HuaweiLteSmsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     )
             self._last_sms_index = max(self._last_sms_index, max_index)
 
-        unread_count = sum(1 for msg in messages if not msg["read"])
         total_count = int(response.get("Count", len(messages)))
 
         return {
             "messages": messages,
-            "unread_count": unread_count,
             "total_count": total_count,
         }
 
@@ -181,22 +179,32 @@ class HuaweiLteSmsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         await self.async_request_refresh()
 
-    async def async_mark_read(self, sms_index: int) -> None:
-        """Mark an SMS as read."""
+    async def async_delete_all_sms(self) -> int:
+        """Delete all SMS messages. Returns count of deleted messages."""
         router = self._get_router()
+        deleted = 0
 
-        async with self._api_lock:
-            await self.hass.async_add_executor_job(
-                router.client.sms.set_read, sms_index
-            )
+        while True:
+            async with self._api_lock:
+                response = await self.hass.async_add_executor_job(
+                    router.client.sms.get_sms_list,
+                    1,
+                    BoxTypeEnum.LOCAL_INBOX,
+                    50,
+                    SortTypeEnum.DATE,
+                    False,
+                    False,
+                )
+            messages = _parse_sms_list(response)
+            if not messages:
+                break
+            for msg in messages:
+                async with self._api_lock:
+                    await self.hass.async_add_executor_job(
+                        router.client.sms.delete_sms, msg["index"]
+                    )
+                deleted += 1
 
         await self.async_request_refresh()
+        return deleted
 
-    async def async_send_sms(self, phone: str, message: str) -> None:
-        """Send an SMS message."""
-        router = self._get_router()
-
-        async with self._api_lock:
-            await self.hass.async_add_executor_job(
-                router.client.sms.send_sms, [phone], message
-            )

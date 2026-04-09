@@ -1,11 +1,4 @@
 {
-  "entity": {
-    "sensor": {
-      "unread_sms": {
-        "default": "mdi:email-arrow-left"
-      }
-    }
-  },
   "services": {
     "delete_sms": {
       "service": "mdi:message-minus"
@@ -13,11 +6,8 @@
     "get_sms_list": {
       "service": "mdi:message-text"
     },
-    "mark_read": {
-      "service": "mdi:message-check"
-    },
-    "send_sms": {
-      "service": "mdi:message-arrow-right"
+    "delete_all_sms": {
+      "service": "mdi:message-off"
     }
   }
 }

@@ -20,9 +20,6 @@
   },
   "entity": {
     "sensor": {
-      "unread_sms": {
-        "name": "Непрочитанные SMS"
-      },
       "last_sms": {
         "name": "Последнее SMS"
       }
@@ -61,35 +58,13 @@
         }
       }
     },
-    "mark_read": {
-      "name": "Отметить SMS как прочитанное",
-      "description": "Отметить SMS-сообщение как прочитанное по его индексу.",
+    "delete_all_sms": {
+      "name": "Удалить все SMS",
+      "description": "Удалить все SMS-сообщения из входящих роутера.",
       "fields": {
         "entry_id": {
           "name": "Запись конфигурации",
           "description": "Запись конфигурации Huawei LTE Extended."
-        },
-        "index": {
-          "name": "Индекс сообщения",
-          "description": "Индекс SMS для отметки как прочитанного."
-        }
-      }
-    },
-    "send_sms": {
-      "name": "Отправить SMS",
-      "description": "Отправить SMS-сообщение через роутер.",
-      "fields": {
-        "entry_id": {
-          "name": "Запись конфигурации",
-          "description": "Запись конфигурации Huawei LTE Extended."
-        },
-        "phone": {
-          "name": "Номер телефона",
-          "description": "Номер телефона получателя (например, +79001234567)."
-        },
-        "message": {
-          "name": "Сообщение",
-          "description": "Текст SMS-сообщения."
         }
       }
     }

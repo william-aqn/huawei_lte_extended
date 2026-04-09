@@ -9,7 +9,7 @@ Custom component for [Home Assistant](https://www.home-assistant.io/) that exten
 - **Last SMS sensor** — shows the content of the most recently received message with phone, date, index as attributes
 - **Unread SMS sensor** — displays unread message count with recent messages in attributes
 - **New SMS event** — fires `huawei_lte_extended_sms_received` when a new message arrives, usable as an automation trigger
-- **Services** — read inbox, delete messages, mark as read, send SMS
+- **Services** — read inbox, delete messages, delete all messages
 - **Diagnostics** — sensitive SMS data (phone numbers, message content) is automatically redacted
 - **Suspended router support** — services gracefully skip when the base integration is suspended
 
@@ -40,34 +40,14 @@ Custom component for [Home Assistant](https://www.home-assistant.io/) that exten
 3. Select your Huawei LTE router from the dropdown
 4. Set the SMS polling interval (default: 60 seconds)
 
-## Sensors
-
-### Last SMS (`sensor.{name}_last_sms`)
+## Sensor: Last SMS (`sensor.{name}_last_sms`)
 
 | Property | Description |
 |----------|-------------|
 | State | Content of the most recent SMS message |
 | `phone` | Sender phone number |
 | `date` | Date and time received |
-| `index` | Message index (used for delete/mark_read) |
-| `read` | `true` / `false` |
-
-### Unread SMS (`sensor.{name}_unread_sms`)
-
-| Property | Description |
-|----------|-------------|
-| State | Number of unread SMS messages |
-| `total_count` | Total number of messages in inbox |
-| `messages` | List of up to 10 recent messages |
-
-Each message in the `messages` attribute contains:
-
-| Field | Description |
-|-------|-------------|
-| `index` | Message index (used for delete/mark_read) |
-| `phone` | Sender phone number |
-| `content` | Message text |
-| `date` | Date and time received |
+| `index` | Message index (used for delete) |
 | `read` | `true` / `false` |
 
 ## Event: `huawei_lte_extended_sms_received`
@@ -121,6 +101,23 @@ automation:
             Full text: {{ trigger.event.data.content }}
 ```
 
+**Catch SMS from a specific number:**
+
+```yaml
+automation:
+  - alias: "Alert on SMS from bank"
+    trigger:
+      - platform: event
+        event_type: huawei_lte_extended_sms_received
+        event_data:
+          phone: "+79001234567"
+    action:
+      - service: notify.mobile_app_phone
+        data:
+          title: "Bank SMS"
+          message: "{{ trigger.event.data.content }}"
+```
+
 **Auto-delete spam SMS by keyword:**
 
 ```yaml
@@ -161,55 +158,27 @@ Delete a message by index.
 | `entry_id` | yes | Config entry ID |
 | `index` | yes | Message index |
 
-### `huawei_lte_extended.mark_read`
+### `huawei_lte_extended.delete_all_sms`
 
-Mark a message as read.
-
-| Field | Required | Description |
-|-------|----------|-------------|
-| `entry_id` | yes | Config entry ID |
-| `index` | yes | Message index |
-
-### `huawei_lte_extended.send_sms`
-
-Send an SMS message via the router.
+Delete all SMS messages from the router inbox. Returns the number of deleted messages. Useful for periodic cleanup to prevent memory overflow.
 
 | Field | Required | Description |
 |-------|----------|-------------|
 | `entry_id` | yes | Config entry ID |
-| `phone` | yes | Recipient phone number (e.g. `+79001234567`) |
-| `message` | yes | Text of the SMS message |
 
-## Dashboard: Send SMS card
-
-Create two helpers in **Settings > Devices & Services > Helpers**:
-
-- `input_text.sms_phone` — Phone number (max length: 20)
-- `input_text.sms_message` — Message text (max length: 255)
-
-Then add this card to your dashboard:
+**Periodic cleanup automation:**
 
 ```yaml
-type: entities
-title: Send SMS
-entities:
-  - entity: input_text.sms_phone
-    name: Phone number
-  - entity: input_text.sms_message
-    name: Message
-  - type: button
-    name: Send
-    icon: mdi:send
-    tap_action:
-      action: perform-action
-      perform_action: huawei_lte_extended.send_sms
-      data:
-        entry_id: YOUR_ENTRY_ID
-        phone: "{{ states('input_text.sms_phone') }}"
-        message: "{{ states('input_text.sms_message') }}"
+automation:
+  - alias: "Delete all SMS daily"
+    trigger:
+      - platform: time
+        at: "03:00:00"
+    action:
+      - service: huawei_lte_extended.delete_all_sms
+        data:
+          entry_id: YOUR_ENTRY_ID
 ```
-
-> Replace `YOUR_ENTRY_ID` with your config entry ID (find it in **Settings > Devices & Services > Huawei LTE Extended** — click configure, the entry ID is in the URL).
 
 ## How it works
 

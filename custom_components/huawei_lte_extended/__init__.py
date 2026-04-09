@@ -21,8 +21,7 @@ PLATFORMS = [Platform.SENSOR]
 
 SERVICE_GET_SMS_LIST = "get_sms_list"
 SERVICE_DELETE_SMS = "delete_sms"
-SERVICE_MARK_READ = "mark_read"
-SERVICE_SEND_SMS = "send_sms"
+SERVICE_DELETE_ALL_SMS = "delete_all_sms"
 
 SERVICE_SCHEMA_GET_SMS_LIST = vol.Schema(
     {
@@ -43,18 +42,9 @@ SERVICE_SCHEMA_DELETE_SMS = vol.Schema(
     }
 )
 
-SERVICE_SCHEMA_MARK_READ = vol.Schema(
+SERVICE_SCHEMA_DELETE_ALL_SMS = vol.Schema(
     {
         vol.Required("entry_id"): cv.string,
-        vol.Required("index"): vol.All(vol.Coerce(int), vol.Range(min=0)),
-    }
-)
-
-SERVICE_SCHEMA_SEND_SMS = vol.Schema(
-    {
-        vol.Required("entry_id"): cv.string,
-        vol.Required("phone"): cv.string,
-        vol.Required("message"): cv.string,
     }
 )
 
@@ -90,20 +80,13 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
         if not coordinator.is_router_suspended:
             await coordinator.async_delete_sms(call.data["index"])
 
-    async def handle_mark_read(call: ServiceCall) -> None:
-        """Handle mark_read service call."""
+    async def handle_delete_all_sms(call: ServiceCall) -> dict[str, Any]:
+        """Handle delete_all_sms service call."""
         coordinator = _get_coordinator(hass, call.data["entry_id"])
-        if not coordinator.is_router_suspended:
-            await coordinator.async_mark_read(call.data["index"])
-
-    async def handle_send_sms(call: ServiceCall) -> None:
-        """Handle send_sms service call."""
-        coordinator = _get_coordinator(hass, call.data["entry_id"])
-        if not coordinator.is_router_suspended:
-            await coordinator.async_send_sms(
-                phone=call.data["phone"],
-                message=call.data["message"],
-            )
+        if coordinator.is_router_suspended:
+            return {"deleted": 0}
+        deleted = await coordinator.async_delete_all_sms()
+        return {"deleted": deleted}
 
     hass.services.async_register(
         DOMAIN,
@@ -122,16 +105,10 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_MARK_READ,
-        handle_mark_read,
-        schema=SERVICE_SCHEMA_MARK_READ,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SEND_SMS,
-        handle_send_sms,
-        schema=SERVICE_SCHEMA_SEND_SMS,
+        SERVICE_DELETE_ALL_SMS,
+        handle_delete_all_sms,
+        schema=SERVICE_SCHEMA_DELETE_ALL_SMS,
+        supports_response=SupportsResponse.ONLY,
     )
 
     return True

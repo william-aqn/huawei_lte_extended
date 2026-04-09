@@ -34,33 +34,11 @@ get_sms_list:
           max: 50
           mode: box
 
-mark_read:
+delete_all_sms:
   fields:
     entry_id:
       required: true
       selector:
         config_entry:
           integration: huawei_lte_extended
-    index:
-      required: true
-      selector:
-        number:
-          min: 0
-          mode: box
 
-send_sms:
-  fields:
-    entry_id:
-      required: true
-      selector:
-        config_entry:
-          integration: huawei_lte_extended
-    phone:
-      required: true
-      selector:
-        text:
-    message:
-      required: true
-      selector:
-        text:
-          multiline: true
