@@ -45,6 +45,9 @@ SERVICE_SCHEMA_DELETE_SMS = vol.Schema(
 SERVICE_SCHEMA_DELETE_ALL_SMS = vol.Schema(
     {
         vol.Required("entry_id"): cv.string,
+        vol.Optional("keep_last", default=1): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=50)
+        ),
     }
 )
 
@@ -85,7 +88,9 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
         coordinator = _get_coordinator(hass, call.data["entry_id"])
         if coordinator.is_router_suspended:
             return {"deleted": 0}
-        deleted = await coordinator.async_delete_all_sms()
+        deleted = await coordinator.async_delete_all_sms(
+            keep_last=call.data["keep_last"]
+        )
         return {"deleted": deleted}
 
     hass.services.async_register(

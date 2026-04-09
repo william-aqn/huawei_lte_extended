@@ -65,6 +65,10 @@
         "entry_id": {
           "name": "Config entry",
           "description": "The Huawei LTE Extended config entry to use."
+        },
+        "keep_last": {
+          "name": "Keep last",
+          "description": "Number of most recent messages to keep (0 = delete all)."
         }
       }
     }

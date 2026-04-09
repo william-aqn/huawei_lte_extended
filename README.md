@@ -160,11 +160,12 @@ Delete a message by index.
 
 Delete all SMS messages from the router inbox. Returns the number of deleted messages. Useful for periodic cleanup to prevent memory overflow.
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `entry_id` | yes | Config entry ID |
+| Field | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `entry_id` | yes | — | Config entry ID |
+| `keep_last` | no | 1 | Number of most recent messages to keep (0 = delete all) |
 
-**Periodic cleanup automation:**
+**Periodic cleanup automation (keep last 1 message):**
 
 ```yaml
 automation:
@@ -176,6 +177,7 @@ automation:
       - service: huawei_lte_extended.delete_all_sms
         data:
           entry_id: YOUR_ENTRY_ID
+          keep_last: 1
 ```
 
 ## How it works

@@ -41,4 +41,11 @@ delete_all_sms:
       selector:
         config_entry:
           integration: huawei_lte_extended
+    keep_last:
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 50
+          mode: box
 

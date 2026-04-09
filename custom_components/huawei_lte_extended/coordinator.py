@@ -179,10 +179,25 @@ class HuaweiLteSmsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         await self.async_request_refresh()
 
-    async def async_delete_all_sms(self) -> int:
-        """Delete all SMS messages. Returns count of deleted messages."""
+    async def async_delete_all_sms(self, keep_last: int = 0) -> int:
+        """Delete all SMS messages. Returns count of deleted."""
         router = self._get_router()
         deleted = 0
+        keep_indexes: set[int] = set()
+
+        if keep_last > 0:
+            async with self._api_lock:
+                response = await self.hass.async_add_executor_job(
+                    router.client.sms.get_sms_list,
+                    1,
+                    BoxTypeEnum.LOCAL_INBOX,
+                    keep_last,
+                    SortTypeEnum.DATE,
+                    False,
+                    False,
+                )
+            for msg in _parse_sms_list(response):
+                keep_indexes.add(msg["index"])
 
         while True:
             async with self._api_lock:
@@ -196,9 +211,10 @@ class HuaweiLteSmsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     False,
                 )
             messages = _parse_sms_list(response)
-            if not messages:
+            to_delete = [m for m in messages if m["index"] not in keep_indexes]
+            if not to_delete:
                 break
-            for msg in messages:
+            for msg in to_delete:
                 async with self._api_lock:
                     await self.hass.async_add_executor_job(
                         router.client.sms.delete_sms, msg["index"]
