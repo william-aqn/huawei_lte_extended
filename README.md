@@ -7,11 +7,9 @@ Custom component for [Home Assistant](https://www.home-assistant.io/) that exten
 ## Features
 
 - **Last SMS sensor** — shows the content of the most recently received message with phone, date, index as attributes
-- **Unread SMS sensor** — displays unread message count with recent messages in attributes
 - **New SMS event** — fires `huawei_lte_extended_sms_received` when a new message arrives, usable as an automation trigger
-- **Services** — read inbox, delete messages, delete all messages
+- **Services** — read inbox, delete single or all messages
 - **Diagnostics** — sensitive SMS data (phone numbers, message content) is automatically redacted
-- **Suspended router support** — services gracefully skip when the base integration is suspended
 
 ## Requirements
 
