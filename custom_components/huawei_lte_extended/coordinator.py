@@ -84,17 +84,27 @@ class HuaweiLteSmsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _get_router(self) -> Any:
         """Get the parent huawei_lte Router object."""
-        huawei_data = self.hass.data.get(HUAWEI_LTE_DOMAIN)
-        if huawei_data is None:
-            raise ConfigEntryNotReady("huawei_lte integration not loaded")
-
-        router = huawei_data.routers.get(self._parent_entry_id)
-        if router is None:
+        entry = self.hass.config_entries.async_get_entry(self._parent_entry_id)
+        if entry is None or entry.domain != HUAWEI_LTE_DOMAIN:
             raise UpdateFailed(
-                f"Parent router {self._parent_entry_id} not found. "
-                "Is the Huawei LTE integration loaded?"
+                f"Parent huawei_lte entry {self._parent_entry_id} not found"
             )
-        return router
+
+        # HA 2026.5+: Router is stored on entry.runtime_data
+        router = getattr(entry, "runtime_data", None)
+        if router is not None:
+            return router
+
+        # Legacy HA: Router was stored on hass.data[huawei_lte].routers[entry_id]
+        huawei_data = self.hass.data.get(HUAWEI_LTE_DOMAIN)
+        if huawei_data is not None and hasattr(huawei_data, "routers"):
+            router = huawei_data.routers.get(self._parent_entry_id)
+            if router is not None:
+                return router
+
+        raise ConfigEntryNotReady(
+            f"Parent huawei_lte entry {self._parent_entry_id} is not loaded yet"
+        )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch SMS list from router."""

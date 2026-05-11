@@ -35,10 +35,18 @@ async def async_get_config_entry_diagnostics(
 
     # Get parent router data if available
     parent_router_data: dict[str, Any] = {}
-    huawei_data = hass.data.get(HUAWEI_LTE_DOMAIN)
-    if huawei_data and parent_entry_id:
-        router = huawei_data.routers.get(parent_entry_id)
-        if router:
+    if parent_entry_id:
+        parent_entry = hass.config_entries.async_get_entry(parent_entry_id)
+        router = None
+        # HA 2026.5+: Router is stored on entry.runtime_data
+        if parent_entry is not None and parent_entry.domain == HUAWEI_LTE_DOMAIN:
+            router = getattr(parent_entry, "runtime_data", None)
+        # Legacy HA: Router was stored on hass.data[huawei_lte].routers[entry_id]
+        if router is None:
+            huawei_data = hass.data.get(HUAWEI_LTE_DOMAIN)
+            if huawei_data is not None and hasattr(huawei_data, "routers"):
+                router = huawei_data.routers.get(parent_entry_id)
+        if router is not None:
             parent_router_data = router.data
 
     return async_redact_data(
