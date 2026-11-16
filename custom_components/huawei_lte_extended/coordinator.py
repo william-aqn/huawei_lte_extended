@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from time import monotonic
 from typing import Any
 
 from huawei_lte_api.enums.sms import BoxTypeEnum, SortTypeEnum
@@ -23,6 +24,7 @@ from .const import (
     EVENT_SMS_RECEIVED,
     HUAWEI_LTE_DOMAIN,
 )
+from .sms_tracker import SmsTracker
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,8 +64,7 @@ class HuaweiLteSmsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize the coordinator."""
         self._parent_entry_id: str = entry.data[CONF_PARENT_ENTRY_ID]
         scan_interval = entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        self._last_sms_index: int = 0
-        self._initial_scan_done: bool = False
+        self._sms_tracker = SmsTracker(scan_interval)
         self._api_lock = asyncio.Lock()
 
         super().__init__(
@@ -115,48 +116,47 @@ class HuaweiLteSmsCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         async with self._api_lock:
             try:
-                response = await self.hass.async_add_executor_job(
-                    router.client.sms.get_sms_list,
-                    1,  # page
-                    BoxTypeEnum.LOCAL_INBOX,
-                    DEFAULT_SMS_PAGE_SIZE,
-                    SortTypeEnum.DATE,
-                    False,  # ascending
-                    True,  # unread_preferred
-                )
+                messages = []
+                indexes: set[int] = set()
+                page = 1
+                while True:
+                    response = await self.hass.async_add_executor_job(
+                        router.client.sms.get_sms_list,
+                        page,
+                        BoxTypeEnum.LOCAL_INBOX,
+                        DEFAULT_SMS_PAGE_SIZE,
+                        SortTypeEnum.DATE,
+                        False,  # ascending
+                        False,  # use chronological order, not unread priority
+                    )
+                    batch = _parse_sms_list(response)
+                    batch_indexes = {msg["index"] for msg in batch}
+                    if indexes & batch_indexes or len(batch_indexes) != len(batch):
+                        raise UpdateFailed("SMS inbox changed during pagination")
+                    indexes.update(batch_indexes)
+                    messages.extend(batch)
+                    if len(batch) < DEFAULT_SMS_PAGE_SIZE:
+                        break
+                    page += 1
             except Exception as err:
                 raise UpdateFailed(f"Error fetching SMS list: {err}") from err
 
-        messages = _parse_sms_list(response)
-        max_index = max(
-            (int(msg["index"]) for msg in messages), default=0
-        )
-
-        # Fire events for new messages (skip first scan to avoid flooding)
-        if not self._initial_scan_done:
-            self._initial_scan_done = True
-            self._last_sms_index = max_index
-        else:
-            for msg in messages:
-                if int(msg["index"]) > self._last_sms_index:
-                    _LOGGER.debug("New SMS received (index %s)", msg["index"])
-                    self.hass.bus.async_fire(
-                        EVENT_SMS_RECEIVED,
-                        {
-                            "entry_id": self.config_entry.entry_id,
-                            "phone": msg["phone"],
-                            "content": msg["content"],
-                            "date": msg["date"],
-                            "index": msg["index"],
-                        },
-                    )
-            self._last_sms_index = max(self._last_sms_index, max_index)
-
-        total_count = int(response.get("Count", len(messages)))
+        for msg in self._sms_tracker.update(messages, monotonic()):
+            _LOGGER.debug("New SMS received (index %s)", msg["index"])
+            self.hass.bus.async_fire(
+                EVENT_SMS_RECEIVED,
+                {
+                    "entry_id": self.config_entry.entry_id,
+                    "phone": msg["phone"],
+                    "content": msg["content"],
+                    "date": msg["date"],
+                    "index": msg["index"],
+                },
+            )
 
         return {
             "messages": messages,
-            "total_count": total_count,
+            "total_count": len(messages),
         }
 
     async def async_get_sms_list(

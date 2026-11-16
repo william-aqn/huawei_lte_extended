@@ -182,7 +182,21 @@ automation:
 
 ## How it works
 
-The component reuses the connection from the built-in Huawei LTE integration — no duplicate sessions or extra credentials needed. It periodically calls the router's SMS API (`get_sms_list`) and tracks the highest message index to detect new arrivals. On the first poll after startup, existing messages are indexed silently (no events fired) to avoid a flood of notifications.
+The component reuses the connection from the built-in Huawei LTE integration — no duplicate sessions or extra credentials needed. Each poll reads all inbox pages in date order. New messages are identified by sender, message date and content, independently of the router's reusable storage indexes and read status. The first successful full scan after startup establishes a silent baseline; existing messages are not announced.
+
+Notifications wait for the same body to be observed again after one polling interval. This gives the router time to assemble multipart messages. Fragments contained in an assembled multipart message with the same sender and date are suppressed. A rebuilding message is released at the first successful poll at least 60 seconds after its first observation, even if its body is still changing. Failed polls do not advance detection. The Last SMS sensor continues to show the current router data immediately.
+
+At the default 60-second interval, an unchanged new message is normally announced within two polling intervals of arrival (up to about 120 seconds). With a 20-second interval, this is normally up to about 40 seconds. These are polling delays, not delivery guarantees: outages and delayed network segments can take longer. A fragment that remains unchanged through the settling window may still be announced before a later complete message; the text API does not expose reliable segment-completion metadata.
+
+Detection is in memory, with at most 2048 recent removed fingerprints in addition to the current inbox. Restarting establishes a new baseline rather than replaying messages received while Home Assistant was stopped. Messages with identical sender, date and content cannot be distinguished. No SMS content is added to debug logs.
+
+## Tests
+
+The regression suite uses Python's standard library and does not require Home Assistant or network access:
+
+```sh
+python -m unittest discover -s tests -v
+```
 
 ## License
 
