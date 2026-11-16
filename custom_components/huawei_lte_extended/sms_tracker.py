@@ -38,7 +38,9 @@ class SmsTracker:
     """Track complete inbox snapshots, using monotonic time for settling."""
 
     def __init__(self, settle_seconds: float, max_wait_seconds: float = 60) -> None:
-        self._settle_seconds = settle_seconds
+        # Scheduled polls have small execution-time differences. Do not require
+        # a third poll just because the second finished milliseconds earlier.
+        self._settle_seconds = settle_seconds - min(1.0, settle_seconds * 0.05)
         self._max_wait_seconds = max_wait_seconds
         self._initialized = False
         self._seen: OrderedDict[str, None] = OrderedDict()

@@ -69,8 +69,13 @@ class SmsTrackerTests(unittest.TestCase):
     def test_repeated_refresh_does_not_bypass_settling(self):
         self.tracker.update([sms()], 20)
         self.assertEqual(self.tracker.update([sms()], 20.1), [])
-        self.assertEqual(self.tracker.update([sms()], 39.9), [])
+        self.assertEqual(self.tracker.update([sms()], 38.9), [])
         self.assertEqual(self.tracker.update([sms()], 40), [sms()])
+
+    def test_scheduled_poll_jitter_does_not_require_a_third_poll(self):
+        self.tracker.update([sms()], 20)
+        self.assertEqual(self.tracker.update([sms()], 39.98), [sms()])
+        self.assertEqual(self.tracker.update([sms()], 60), [])
 
     def test_deleted_pending_message_is_not_announced(self):
         self.tracker.update([sms()], 20)
